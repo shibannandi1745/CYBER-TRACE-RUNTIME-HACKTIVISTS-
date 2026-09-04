@@ -10,9 +10,8 @@ services:
     autoDeploy: true
 
   # Frontend Static Site
-  - type: web
+  - type: static_site
     name: cybertrace-frontend
-    runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
@@ -26,5 +25,4 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
-    plan: free
     autoDeploy: true

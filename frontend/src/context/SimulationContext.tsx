@@ -29,12 +29,12 @@ interface SimulationContextType {
 const SimulationContext = createContext<SimulationContextType | undefined>(undefined);
 
 const RAW_API = (import.meta.env.VITE_API_URL || "http://localhost:8000").trim().replace(/\/+$/, "");
-const API_BASE = RAW_API;
+const API_BASE = RAW_API.startsWith("http") ? RAW_API : `https://${RAW_API}`;
 const WS_BASE = import.meta.env.VITE_WS_URL 
   ? import.meta.env.VITE_WS_URL.trim().replace(/\/+$/, "") 
-  : (RAW_API.startsWith("https://") 
-      ? RAW_API.replace(/^https:\/\//i, "wss://") + "/ws" 
-      : RAW_API.replace(/^http:\/\//i, "ws://") + "/ws");
+  : (API_BASE.startsWith("https://") 
+      ? API_BASE.replace(/^https:\/\//i, "wss://") + "/ws" 
+      : API_BASE.replace(/^http:\/\//i, "ws://") + "/ws");
 
 
 export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
