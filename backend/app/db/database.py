@@ -7,7 +7,10 @@ from threading import Lock
 
 # Database file path
 DB_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-DB_PATH = os.path.join(DB_DIR, "cybertrace.db")
+if os.environ.get("VERCEL"):
+    DB_PATH = os.path.join("/tmp", "cybertrace.db")
+else:
+    DB_PATH = os.path.join(DB_DIR, "cybertrace.db")
 
 _db_lock = Lock()
 
@@ -25,8 +28,11 @@ def init_db():
         cursor = conn.cursor()
 
         # Performance pragmas
-        cursor.execute("PRAGMA journal_mode = WAL;")
-        cursor.execute("PRAGMA synchronous = NORMAL;")
+        try:
+            cursor.execute("PRAGMA journal_mode = WAL;")
+            cursor.execute("PRAGMA synchronous = NORMAL;")
+        except Exception:
+            pass
 
         # 1. Telemetry Events Table
         cursor.execute("""

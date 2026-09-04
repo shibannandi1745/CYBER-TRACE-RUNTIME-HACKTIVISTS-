@@ -7,9 +7,28 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from .engine import CyberTraceEngine
-from .models.alert import AnalystAvailability
-from .models.audit import AuditActor
+import os
+import sys
+from pathlib import Path
+
+# Ensure root and backend directories are in sys.path for serverless runtimes (e.g. Vercel)
+_current_file = Path(__file__).resolve()
+_app_dir = _current_file.parent
+_backend_dir = _app_dir.parent
+_root_dir = _backend_dir.parent
+
+for _p in [str(_root_dir), str(_backend_dir), str(_app_dir)]:
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
+try:
+    from .engine import CyberTraceEngine
+    from .models.alert import AnalystAvailability
+    from .models.audit import AuditActor
+except (ImportError, ValueError):
+    from backend.app.engine import CyberTraceEngine
+    from backend.app.models.alert import AnalystAvailability
+    from backend.app.models.audit import AuditActor
 
 # Initialize engine instance
 engine = CyberTraceEngine()
@@ -210,12 +229,20 @@ def reset_simulation():
 
 # ------------------ DATABASE PERSISTENCE ENDPOINTS ------------------
 
-from .db.database import (
-    get_database_stats,
-    get_historical_events,
-    get_historical_incidents,
-    get_historical_audit_logs,
-)
+try:
+    from .db.database import (
+        get_database_stats,
+        get_historical_events,
+        get_historical_incidents,
+        get_historical_audit_logs,
+    )
+except (ImportError, ValueError):
+    from backend.app.db.database import (
+        get_database_stats,
+        get_historical_events,
+        get_historical_incidents,
+        get_historical_audit_logs,
+    )
 
 
 @app.get("/api/db/stats")
@@ -269,3 +296,7 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception:
         if websocket in connected_clients:
             connected_clients.remove(websocket)
+
+
+# Alias for Vercel Serverless Function entry point
+handler = app
